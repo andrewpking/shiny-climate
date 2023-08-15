@@ -7,7 +7,8 @@ cities_df <- read_csv("www/data/CityAnnualTemps.csv")
 # Function to get a list of countries from the data-set
 get_countries <- function() {
   country_list <- co2_df %>%
-    distinct(Country)
+    distinct(Country) %>%
+    pull(Country)
   return(country_list)
 }
 
@@ -144,15 +145,25 @@ server <- function(input, output){
       filter(dt %in% as.character(c(min_year: max_year))) %>%
       group_by(Country) %>%
       mutate(co2 = sum(co2, na.rm = TRUE)) %>%
-      mutate(AverageTemperature = mean(
-        AverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(MaxAverageTemperature = max(
-        MaxAverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(MinAverageTemperature = max(
-        MinAverageTemperature, na.rm = TRUE
-      )) %>%
+      filter(dt %in% as.character(c(min_year, max_year))) %>%
+      mutate(AverageTemperature = ifelse(
+        !is.na(AverageTemperature),
+        diff(AverageTemperature),
+        NA
+        ) 
+      ) %>%
+      mutate(MaxAverageTemperature = ifelse(
+        !is.na(MaxAverageTemperature),
+        diff(MaxAverageTemperature),
+        NA
+        ) 
+      ) %>%
+      mutate(MinAverageTemperature = ifelse(
+        !is.na(MinAverageTemperature),
+        diff(MinAverageTemperature),
+        NA
+        ) 
+      ) %>%
       filter(dt == as.character(max_year)) %>%
       select(dt, Country, 
              AverageTemperature, 
