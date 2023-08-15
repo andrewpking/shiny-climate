@@ -144,8 +144,7 @@ server <- function(input, output){
       filter(dt %in% as.character(c(min_year: max_year))) %>%
       group_by(Country) %>%
       mutate(co2 = sum(co2, na.rm = TRUE)) %>%
-      filter(dt %in% as.character(c(min_year, max_year))) %>%
-      mutate(AverageTemperature = diff(
+      mutate(AverageTemperature = mean(
         AverageTemperature, na.rm = TRUE
       )) %>%
       mutate(MaxAverageTemperature = max(
