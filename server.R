@@ -148,7 +148,7 @@ server <- function(input, output){
     selected_df <- temp_vs_co2_increase(countries, min_year, max_year) %>%
       arrange(desc(co2)) %>%
       reframe(
-        `Year` = dt,
+        `Year` = as.character(dt),
         Country,
         `Average Temperature Change` = avg_temp_change,
         `Maximum Temperature Change` = max_temp_change,
@@ -167,9 +167,9 @@ server <- function(input, output){
     
     co2_plotl <- ggplot(selected_df) +
       geom_col(aes(
-        y = co2,
+        y = avg_temp_change,
         x = Country,
-        fill = avg_temp_change,
+        fill = co2,
         text = paste0("Region: ", Country, "<br>",
                      "Year: ", min_year, "-", max_year, "<br>",
                      "Average Temperature Change: ", avg_temp_change, "<br>",
@@ -177,11 +177,13 @@ server <- function(input, output){
                      "Minimum Temperature Change: ", min_temp_change, "<br>",
                      "Absoluate CO2 Emissions: ", co2)
       )) +
-      labs(title = paste("Absolute C02 Emissions and Growth from", min_year,
+      labs(title = paste("Temperature Growth and CO2 Emissions from", min_year,
                          "to", max_year,"by Region"),
-           fill = "Average Temperature Change (C)",
-           x = "Continent", y = "CO2 Emissions during this time") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+           fill = "Total CO2 Emissions",
+           x = "Continent", y = "Average Temperature Change (°C)") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+            legend.position = "bottom") + 
+      scale_fill_gradient(low = "darkkhaki", high = "darkgreen")
     co2_plotly <- ggplotly(co2_plotl, tooltip = "text")
     return(co2_plotly)
   })

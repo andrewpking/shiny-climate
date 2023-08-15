@@ -26,7 +26,7 @@
     color: #000;
     font-weight: 500;
     padding-left: 20px;
-    width: 240px;
+    width: 270px;
 }
 
 .navbar-default .navbar-nav > li > a {
@@ -166,11 +166,11 @@ img, h1, h2, h3, h4, p, .list, .table {
     margin-left: auto;
 }
 
-.chart #temp_table tr {
+.chart #co2Table tr {
     max-width: fit-content;
 }
 
-#intro_table tbody, #temp_table tbody {
+#co2Table tbody {
     font-size: 1em;
     margin-bottom: 10px;
     line-height: 1.35em;
@@ -179,7 +179,7 @@ img, h1, h2, h3, h4, p, .list, .table {
     background-color: rgba(167, 218, 165, 0.93);
 }
 
-#intro_table thead, #temp_table thead {
+#co2Table thead {
     font-size: 1em;
     margin-bottom: 10px;
     line-height: 1.35em;
