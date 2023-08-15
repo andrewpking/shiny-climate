@@ -1,3 +1,6 @@
+library(shiny)
+library(plotly)
+
 graph_page <- tabPanel(
   "Visualizing CO2",
   h1("Visualizing CO2 Emissions"),

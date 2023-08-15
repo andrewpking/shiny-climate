@@ -1,14 +1,13 @@
-library(tidyverse)
 library(plotly)
 
 # Read the data
-co2_df <- read_csv("data/Countries.csv")
-cities_df <- read_csv("data/CityAnnualTemps.csv")
+co2_df <- read_csv("www/data/Countries.csv")
+cities_df <- read_csv("www/data/CityAnnualTemps.csv")
 
 # Function to get a list of countries from the data-set
 get_countries <- function() {
   country_list <- co2_df %>%
-    distinct(country)
+    distinct(Country)
   return(country_list)
 }
 
@@ -17,9 +16,9 @@ get_years <- function() {
   countries <- get_countries()
   
   df <- co2_df %>%
-    filter(country %in% countries)
+    filter(Country %in% countries)
   
-  year_list <- unique(df$year)
+  year_list <- unique(df$dt)
   
   # Initialize min and max value
   min_year <- max(year_list, na.rm = TRUE)
@@ -27,15 +26,15 @@ get_years <- function() {
   
   # Find the maximum among the minimum years
   min_year <- df %>%
-    group_by(country) %>%
-    summarise(min_year_country = min(year)) %>%
+    group_by(Country) %>%
+    summarise(min_year_country = min(dt)) %>%
     pull(min_year_country) %>%
     max()
   
   # Find the minimum among the maximum years
   max_year <- df %>%
-    group_by(country) %>%
-    summarise(max_year_country = max(year)) %>%
+    group_by(Country) %>%
+    summarise(max_year_country = max(dt)) %>%
     pull(max_year_country) %>%
     min()
   
@@ -85,8 +84,8 @@ server <- function(input, output){
     updateSliderInput(
       inputId = "selected_year",
       label = "Select Year",
-      min = years[1],
-      max = years[2],
+      min = 1850,
+      max = 2013,
       value = years,  # Set an initial value to max year
       step = 1
     )
@@ -112,15 +111,27 @@ server <- function(input, output){
     min_year <- years[1]
     max_year <- years[2]
     selected_df <- co2_df %>%
-      filter(country %in% countries) %>%
-      filter(year %in% c(years[1]: years[2])) %>%
-      group_by(country) %>%
+      filter(Country %in% countries) %>%
+      filter(dt %in% as.character(c(min_year: max_year))) %>%
+      group_by(Country) %>%
+      mutate(AverageTemperature = mean(
+        AverageTemperature, na.rm = TRUE
+      )) %>%
+      mutate(MaxAverageTemperature = max(
+        MaxAverageTemperature, na.rm = TRUE
+      )) %>%
+      mutate(MinAverageTemperature = max(
+        MinAverageTemperature, na.rm = TRUE
+      )) %>%
       mutate(co2 = sum(co2, na.rm = TRUE)) %>%
-      mutate(co2_growth_abs = sum(co2_growth_abs, na.rm = TRUE)) %>%
-      filter(year == years[2]) %>%
-      select(country, co2, co2_growth_abs) %>%
+      filter(dt == as.character(max_year)) %>%
+      select(dt, Country, 
+             AverageTemperature, 
+             MaxAverageTemperature, 
+             MinAverageTemperature,
+             co2) %>%
       arrange(desc(co2))
-    selected_df
+    return(selected_df)
   })
   
   output$co2_plotly <- renderPlotly({
@@ -129,28 +140,43 @@ server <- function(input, output){
     min_year <- years[1]
     max_year <- years[2]
     selected_df <- co2_df %>%
-      filter(country %in% countries) %>%
-      filter(year %in% c(years[1]: years[2])) %>%
-      group_by(country) %>%
+      filter(Country %in% countries) %>%
+      filter(dt %in% as.character(c(min_year: max_year))) %>%
+      group_by(Country) %>%
       mutate(co2 = sum(co2, na.rm = TRUE)) %>%
-      mutate(co2_growth_abs = sum(co2_growth_abs, na.rm = TRUE)) %>%
-      filter(year == years[2])
+      filter(dt %in% as.character(c(min_year, max_year))) %>%
+      mutate(AverageTemperature = diff(
+        AverageTemperature, na.rm = TRUE
+      )) %>%
+      mutate(MaxAverageTemperature = max(
+        MaxAverageTemperature, na.rm = TRUE
+      )) %>%
+      mutate(MinAverageTemperature = max(
+        MinAverageTemperature, na.rm = TRUE
+      )) %>%
+      filter(dt == as.character(max_year)) %>%
+      select(dt, Country, 
+             AverageTemperature, 
+             MaxAverageTemperature, 
+             MinAverageTemperature,
+             co2)
     
     co2_plotl <- ggplot(selected_df) +
       geom_col(aes(
         y = co2,
-        x = country,
-        fill = co2_growth_abs,
-        text = paste0("Region: ", country, "<br>",
+        x = Country,
+        fill = AverageTemperature,
+        text = paste0("Region: ", Country, "<br>",
                      "Year: ", min_year, "-", max_year, "<br>",
-                     "CO2 Growth: ", co2_growth_abs,
-                     "<br>",
+                     "Average Temperature: ", AverageTemperature, "<br>",
+                     "Maximum Temperature: ", MaxAverageTemperature, "<br>",
+                     "Minimum Temperature: ", MinAverageTemperature, "<br>",
                      "Absoluate CO2 Emissions: ", co2)
       )) +
       labs(title = paste("Absolute C02 Emissions and Growth from", min_year,
                          "to", max_year,"by Region"),
-           fill = "C02 Growth",
-           x = "Region", y = "Absolute C02 Emissions") +
+           fill = "Average Temperature (C)",
+           x = "Region", y = "CO2 Emissions during this time") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     co2_plotly <- ggplotly(co2_plotl, tooltip = "text")
     return(co2_plotly)
@@ -159,15 +185,19 @@ server <- function(input, output){
   # # Render the second plot.
   # output$co2_plotly2 <- renderPlotly({
   #   years <- selected_year_reactive()
-  #   selected_df <- abs_co2_df() %>%
-  #     filter(year %in% years)
+  #   countries <- get_countries()
+  #   min_year <- years[1]
+  #   max_year <- years[2]
+  #   selected_df <- co2_df %>%
+  #     filter(dt %in% as.character(c(min_year: max_year))) %>%
+  #     filter(Country %in% countries)
   #   
   #   co2_plot2 <- ggplot(selected_df) +
   #     geom_point(aes(
   #       y = co2_growth_abs,
   #       x = population,
   #       fill = abs_co2,
-  #       text = paste0("Region: ", country, "<br>",
+  #       text = paste0("Region: ", Country, "<br>",
   #                     "Year: ", year, "<br>",
   #                     "CO2 Growth: ", co2_growth_abs, "<br>",
   #                     "Absoluate CO2 Emissions: ", abs_co2)
