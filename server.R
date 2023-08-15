@@ -7,7 +7,8 @@ cities_df <- read_csv("www/data/CityAnnualTemps.csv")
 # Function to get a list of countries from the data-set
 get_countries <- function() {
   country_list <- co2_df %>%
-    distinct(Country)
+    distinct(Country) %>%
+    pull(Country)
   return(country_list)
 }
 
@@ -43,12 +44,47 @@ get_years <- function() {
 }
 
 
-
+# Return a list of all continents.
 get_contitents <- function() {
   continents <- c(
     "Africa", "Antarctica", "Asia", "Europe",
     "India", "North America", "South America")
   return(continents)
+}
+
+# Function to create a table of co2 vs temperature increases
+temp_vs_co2_increase <- function(countries, min_year, max_year) {
+  selected_df <- co2_df %>%
+    filter(Country %in% countries) %>%
+    filter(dt %in% as.character(c(min_year: max_year))) %>%
+    group_by(Country) %>%
+    mutate(co2 = sum(co2, na.rm = TRUE)) %>%
+    filter(dt %in% as.character(c(min_year, max_year))) %>%
+    mutate(avg_temp_change = ifelse(
+      !is.na(AverageTemperature),
+      diff(AverageTemperature),
+      NA
+    ) 
+    ) %>%
+    mutate(max_temp_change = ifelse(
+      !is.na(MaxAverageTemperature),
+      diff(MaxAverageTemperature),
+      NA
+    ) 
+    ) %>%
+    mutate(min_temp_change = ifelse(
+      !is.na(MinAverageTemperature),
+      diff(MinAverageTemperature),
+      NA
+    ) 
+    ) %>%
+    filter(dt == as.character(max_year)) %>%
+    select(dt, Country, 
+           avg_temp_change, 
+           max_temp_change, 
+           min_temp_change,
+           co2)
+  return(selected_df)
 }
 
 server <- function(input, output){
@@ -80,13 +116,12 @@ server <- function(input, output){
   # Code for creating a map of C02 by year
   # Dynamically set slider choices based on available years
   observe({
-    years <- get_years()
     updateSliderInput(
       inputId = "selected_year",
       label = "Select Year",
-      min = 1850,
+      min = 1856,
       max = 2013,
-      value = years,  # Set an initial value to max year
+      value = c(1856, 2013),
       step = 1
     )
   })
@@ -110,27 +145,16 @@ server <- function(input, output){
     years <- selected_year_reactive()
     min_year <- years[1]
     max_year <- years[2]
-    selected_df <- co2_df %>%
-      filter(Country %in% countries) %>%
-      filter(dt %in% as.character(c(min_year: max_year))) %>%
-      group_by(Country) %>%
-      mutate(AverageTemperature = mean(
-        AverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(MaxAverageTemperature = max(
-        MaxAverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(MinAverageTemperature = max(
-        MinAverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(co2 = sum(co2, na.rm = TRUE)) %>%
-      filter(dt == as.character(max_year)) %>%
-      select(dt, Country, 
-             AverageTemperature, 
-             MaxAverageTemperature, 
-             MinAverageTemperature,
-             co2) %>%
-      arrange(desc(co2))
+    selected_df <- temp_vs_co2_increase(countries, min_year, max_year) %>%
+      arrange(desc(co2)) %>%
+      reframe(
+        `Year` = as.character(dt),
+        Country,
+        `Average Temperature Change` = avg_temp_change,
+        `Maximum Temperature Change` = max_temp_change,
+        `Minimum Temperature Change` = min_temp_change,
+        `Total CO2 Emissions` = co2
+      )
     return(selected_df)
   })
   
@@ -139,44 +163,27 @@ server <- function(input, output){
     years <- selected_year_reactive()
     min_year <- years[1]
     max_year <- years[2]
-    selected_df <- co2_df %>%
-      filter(Country %in% countries) %>%
-      filter(dt %in% as.character(c(min_year: max_year))) %>%
-      group_by(Country) %>%
-      mutate(co2 = sum(co2, na.rm = TRUE)) %>%
-      mutate(AverageTemperature = mean(
-        AverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(MaxAverageTemperature = max(
-        MaxAverageTemperature, na.rm = TRUE
-      )) %>%
-      mutate(MinAverageTemperature = max(
-        MinAverageTemperature, na.rm = TRUE
-      )) %>%
-      filter(dt == as.character(max_year)) %>%
-      select(dt, Country, 
-             AverageTemperature, 
-             MaxAverageTemperature, 
-             MinAverageTemperature,
-             co2)
+    selected_df <- temp_vs_co2_increase(countries, min_year, max_year)
     
     co2_plotl <- ggplot(selected_df) +
       geom_col(aes(
-        y = co2,
+        y = avg_temp_change,
         x = Country,
-        fill = AverageTemperature,
+        fill = co2,
         text = paste0("Region: ", Country, "<br>",
                      "Year: ", min_year, "-", max_year, "<br>",
-                     "Average Temperature: ", AverageTemperature, "<br>",
-                     "Maximum Temperature: ", MaxAverageTemperature, "<br>",
-                     "Minimum Temperature: ", MinAverageTemperature, "<br>",
+                     "Average Temperature Change: ", avg_temp_change, "<br>",
+                     "Maximum Temperature Change: ", max_temp_change, "<br>",
+                     "Minimum Temperature Change: ", min_temp_change, "<br>",
                      "Absoluate CO2 Emissions: ", co2)
       )) +
-      labs(title = paste("Absolute C02 Emissions and Growth from", min_year,
+      labs(title = paste("Temperature Growth and CO2 Emissions from", min_year,
                          "to", max_year,"by Region"),
-           fill = "Average Temperature (C)",
-           x = "Region", y = "CO2 Emissions during this time") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+           fill = "Total CO2 Emissions",
+           x = "Continent", y = "Average Temperature Change (°C)") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+            legend.position = "bottom") + 
+      scale_fill_gradient(low = "darkkhaki", high = "darkgreen")
     co2_plotly <- ggplotly(co2_plotl, tooltip = "text")
     return(co2_plotly)
   })

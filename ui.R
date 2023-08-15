@@ -4,18 +4,19 @@ library(plotly)
 graph_page <- tabPanel(
   "Visualizing CO2",
   h1("Visualizing CO2 Emissions"),
-  h2("CO2 Emissions Growth per year by Region"),
-  p("These estimations include land development and exclude traded goods."),
+  h2("CO2 Emissions Growth by Region"),
+  p("These estimations include..."),
   
   sidebarLayout(
     sidebarPanel(
       sliderInput(
         inputId = "country_year",
         label = "Select Year",
-        min = 1851,
-        max = 2020,
-        value = c(1800, 2020),
-        step = 1
+        min = 1856,
+        max = 2013,
+        value = c(1856, 2013),
+        step = 1,
+        sep = ""
       ),
       selectInput(
         inputId = "country_name",
@@ -26,9 +27,12 @@ graph_page <- tabPanel(
       )
     ),
     mainPanel(
-      tabsetPanel(
-        tabPanel("Plot", plotlyOutput(outputId = "co2_plotly")),
-        tabPanel("Table", tableOutput("co2Table"))
+      div(
+        class = "chart",
+        tabsetPanel(
+          tabPanel("Plot", plotlyOutput(outputId = "co2_plotly")),
+          tabPanel("Table", tableOutput("co2Table"))
+        )
       )
     )
   )
@@ -41,8 +45,11 @@ summary_page <- tabPanel(
   p("Lorem ipsum dolor...")
 )
 
-ui <- navbarPage(
-  "Climate Change Analysis",
-  graph_page,
-  summary_page
+ui <- fluidPage(
+  includeCSS("www/styles.css"),
+  navbarPage(
+    "Climate Change Analysis",
+    graph_page,
+    summary_page
+  )
 )
