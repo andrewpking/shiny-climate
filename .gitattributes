@@ -1,0 +1,2 @@
+www/data/CityAnnualTemps.csv filter=lfs diff=lfs merge=lfs -text
+www/data/GlobalLandTemperaturesByCity.csv filter=lfs diff=lfs merge=lfs -text

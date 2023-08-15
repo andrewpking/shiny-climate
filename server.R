@@ -2,9 +2,8 @@ library(tidyverse)
 library(plotly)
 
 # Read the data
-co2_df <- read_csv(
-  "https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv"
-)
+co2_df <- read_csv("data/Countries.csv")
+cities_df <- read_csv("data/CityAnnualTemps.csv")
 
 # Function to get a list of countries from the data-set
 get_countries <- function() {
