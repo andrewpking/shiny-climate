@@ -48,7 +48,7 @@ get_years <- function() {
 get_contitents <- function() {
   continents <- c(
     "Africa", "Antarctica", "Asia", "Europe",
-    "India", "North America", "South America")
+    "Oceania", "North America", "South America")
   return(continents)
 }
 
