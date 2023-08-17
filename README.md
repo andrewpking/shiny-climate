@@ -1,7 +1,7 @@
 # Exploring Climate Change in R Shiny
 
-Drew King (they/them) [kingdrew@uw.edu](mailto:kingdrew@uw.edu)
-Derek Liu (he/him) [deliu@uw.edu](mailto:deliu@uw.edu)
+Drew King (they/them) [kingdrew@uw.edu](mailto:kingdrew@uw.edu)  
+Derek Liu (he/him) [deliu@uw.edu](mailto:deliu@uw.edu)  
 08/17/2023
 
 ## Introduction
