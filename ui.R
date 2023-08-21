@@ -4,8 +4,12 @@ library(plotly)
 graph_page <- tabPanel(
   "Visualizing CO2",
   h1("Visualizing CO2 Emissions"),
-  h2("CO2 Emissions Growth by Region"),
-  p("These estimations include..."),
+  h2("Cumulative CO2 Emissions Growth by Continent"),
+  p("cumulative CO2 growth by continent broken down by individual countries,
+    along with average temperatures for each country in the given time frame.
+    The countries shown and time frame may be adjusted. The goal of this
+    visualization is to show which regions are producing the most CO2 and
+    how climate change is affecting them."),
   
   sidebarLayout(
     sidebarPanel(
