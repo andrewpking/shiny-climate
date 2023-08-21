@@ -1,4 +1,5 @@
 library(plotly)
+library(tidyverse)
 
 # Read the data
 co2_df <- read_csv("www/data/Countries.csv")
@@ -260,8 +261,7 @@ server <- function(input, output){
                          "to", max_year,"by Region"),
            fill = "Average Temperature Change (°C)",
            x = "Continent", y = "Total CO2 Emissions") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-            legend.position = "bottom") + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       scale_fill_gradient(low = "darkkhaki", high = "darkgreen")
     co2_plotly <- ggplotly(co2_plotl, tooltip = "text")
     return(co2_plotly)
