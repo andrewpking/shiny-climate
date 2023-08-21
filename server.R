@@ -257,9 +257,9 @@ server <- function(input, output){
                      "Minimum Temperature Change: ", min_temp_change, "<br>",
                      "Absoluate CO2 Emissions: ", co2)
       )) +
-      labs(title = paste("Temperature Growth and CO2 Emissions from", min_year,
-                         "to", max_year,"by Region"),
-           fill = "Average Temperature Change (°C)",
+      labs(title = paste("Climate Change from ", min_year,
+                         "to", max_year,"by Continent"),
+           fill = "Average <br>Temperature <br>Change (°C)",
            x = "Continent", y = "Total CO2 Emissions") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       scale_fill_gradient(low = "darkkhaki", high = "darkgreen")
